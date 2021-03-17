@@ -5,7 +5,11 @@ jnconfig.yaml
 *.model
 *.sklmodel
 *.hdf
-
+.DS_Store
+.idea/
+# these plot files are kind of problematic: they should be ignored (too big)
+# but are kind of relevant and putting them in tmp/ or old/ might hide them
+# from copies. Need to find a solution:
 Plot.allset_unlabelled.*.ipynb
 
 # Byte-compiled / optimized / DLL files

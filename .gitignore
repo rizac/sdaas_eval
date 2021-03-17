@@ -1,5 +1,6 @@
 # Added by me
 tmp/
+old/
 jnconfig.yaml
 *.model
 *.sklmodel

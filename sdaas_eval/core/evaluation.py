@@ -13,8 +13,11 @@ from os import listdir, makedirs
 from os.path import join, dirname, isfile, basename, splitext, isdir
 from itertools import product
 
-from sklearn.ensemble.iforest import IsolationForest
-from sklearn.svm.classes import OneClassSVM
+# from sklearn.ensemble.iforest import IsolationForest
+from sklearn.ensemble import IsolationForest
+# from sklearn.svm.classes import OneClassSVM
+from sklearn.svm import OneClassSVM
+
 from urllib.parse import quote as q, unquote as uq
 import click
 import numpy as np
@@ -22,24 +25,27 @@ import pandas as pd
 from pandas.core.indexes.range import RangeIndex
 from joblib import dump, load
 
-from sod.core import OUTLIER_COL, odict, PREDICT_COL, pdconcat
-from sod.core.metrics import log_loss, average_precision_score, roc_auc_score,\
+from sdaas_eval.core import OUTLIER_COL, odict, PREDICT_COL, pdconcat
+from sdaas_eval.core.metrics import log_loss, average_precision_score, roc_auc_score,\
     roc_curve, precision_recall_curve
 # from sod.core.dataset import is_outlier, OUTLIER_COL
 
 
 def classifier(clf_class, dataframe, **clf_params):
-    '''Returns a scikit learn model fitted with the data of
-    `dataframe`. If `destpath` is not None, saves the classifier to file
+    """Returns a scikit learn model fitted with the data of
+    `dataframe`.
 
     :param dataframe: pandas DataFrame
-    :param columns: list of string denoting the columns of `dataframe` that
-        represents the feature space to fit the classifier with
     :param clf_params: dict of parameters to be passed to `clf_class`
-    '''
+    """
     clf = clf_class(**clf_params)
     clf.fit(dataframe.values)
     return clf
+
+
+def save_clf(clf, destpath):
+    """Saves a classifier to file"""
+    dump(clf, destpath)
 
 
 def predict(clf, dataframe, features, columns=None):
@@ -479,7 +485,7 @@ def run_evaluation(training_param, test_param, destdir):
                         pool.imap_unordered(_classifier_mp, iterargs):
                     # save on the main process (here):
                     if clf is not None:
-                        dump(clf, destpath)
+                        save_clf(clf, destpath)
                         newly_created_models += 1
                     pbar.update(1)
                 # absolutely call these methods

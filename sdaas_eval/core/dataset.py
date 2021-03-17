@@ -13,8 +13,8 @@ from contextlib import contextmanager
 import numpy as np
 import pandas as pd
 
-from sod.core import odict, CLASSNAMES, CLASS_SELECTORS
-from sod.core.paths import DATASETS_DIR
+from sdaas_eval.core import odict, CLASSNAMES, CLASS_SELECTORS
+from sdaas_eval.core.paths import DATASETS_DIR
 
 
 

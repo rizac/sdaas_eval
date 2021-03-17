@@ -17,7 +17,7 @@ from sklearn.metrics import (
     average_precision_score as scikit_average_precision_score,
     precision_recall_fscore_support
 )
-from sod.core import OUTLIER_COL, PREDICT_COL, CLASSNAMES
+from sdaas_eval.core import OUTLIER_COL, PREDICT_COL, CLASSNAMES
 
 
 def log_loss(predicted_df, eps=1e-15, return_mean=True):

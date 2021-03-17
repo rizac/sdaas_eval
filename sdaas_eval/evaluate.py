@@ -14,10 +14,10 @@ from os.path import (
 from yaml import safe_load
 import click
 
-from sod.core.evaluation import TrainingParam, TestParam, run_evaluation
+from sdaas_eval.core.evaluation import TrainingParam, TestParam, run_evaluation
 # from sklearn.svm.classes import OneClassSVM
 # from sklearn.ensemble.iforest import IsolationForest
-from sod.core.paths import EVALUATIONS_CONFIGS_DIR, EVALUATIONS_RESULTS_DIR,\
+from sdaas_eval.core.paths import EVALUATIONS_CONFIGS_DIR, EVALUATIONS_RESULTS_DIR,\
     DATASETS_DIR
 
 

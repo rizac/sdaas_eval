@@ -33,19 +33,26 @@ from sdaas_eval.core.metrics import log_loss, average_precision_score, roc_auc_s
 
 def classifier(clf_class, dataframe, **clf_params):
     """Returns a scikit learn model fitted with the data of
-    `dataframe`.
+    `dataframe`. See :func:`save_clf` and :func:`load_clf` for serializing the
+    the created classifier
 
-    :param dataframe: pandas DataFrame
+    :param dataframe: pandas DataFrame, one feature per column. **NaNs should be
+        removed beforehand with `~pd.isna` for classifiers not supporting NaNs**
     :param clf_params: dict of parameters to be passed to `clf_class`
     """
     clf = clf_class(**clf_params)
     clf.fit(dataframe.values)
     return clf
 
+# Provide clearer IO function names to be exposed publicly
+# (we could use "import as" but they would be hidden):
 
-def save_clf(clf, destpath):
-    """Saves a classifier to file"""
-    dump(clf, destpath)
+
+save_clf = dump  # dump(clf, filename, compress: Any = 0, **kwargs)
+
+
+load_clf = load  # (filename: Any, mmap_mode: Any = None)
+
 
 
 def predict(clf, dataframe, features, columns=None):
@@ -452,7 +459,7 @@ def _predict_mp(args):
         test_df = test_df.dropna(axis=0, subset=features, how='any')
     if test_df.empty:
         return None, destpath
-    pred_df = predict(load(clfpath), test_df, features, columns2save)
+    pred_df = predict(load_clf(clfpath), test_df, features, columns2save)
     return pred_df, destpath
 
 

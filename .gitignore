@@ -6,6 +6,8 @@ jnconfig.yaml
 *.sklmodel
 *.hdf
 
+Plot.allset_unlabelled.*.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

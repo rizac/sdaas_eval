@@ -1,9 +1,9 @@
-'''
+"""
 `utils.py`: utilities for my notebooks. This module should be used only from
 within a Jupyter Notebook.
 
 ---
-When using the module `share` in a Jupyter Notebook, note the following naming
+When using the module in a Jupyter Notebook, note the following naming
 conventions:
 
 `eval_df` denotes an Evaluation Data frame, i.e. a
@@ -24,7 +24,7 @@ the script `evaluate.py`
 Created on 18 Mar 2020
 
 @author: rizac(at)gfz-potsdam.de
-'''
+"""
 from os.path import (join, abspath, dirname, isfile, isdir, basename, dirname,
                      splitext, expanduser, isabs)
 import sys
@@ -48,7 +48,7 @@ from itertools import cycle
 import importlib
 from matplotlib.ticker import MultipleLocator
 
-
+from ..core.psd import psd_values
 from stream2segment.process.db import Segment, Station, get_session as g_s
 import yaml
 
@@ -59,9 +59,11 @@ pd.set_option('display.max_colwidth', 500)
 pd.set_option('display.max_columns', 500)
 
 
+
+
 @contextlib.contextmanager
 def dbsession(dbname_or_dbid):
-    '''`with dbsession(dbname_or_dbid) as session:`'''
+    """`with dbsession(dbname_or_dbid) as session:`"""
     dbname = dbname_or_dbid
     if not isinstance(dbname_or_dbid, str):
         dbname = [
@@ -84,13 +86,13 @@ def dbsession(dbname_or_dbid):
 
 
 def printhtml(what):
-    '''Same as display_html(text, True): prints the html formatted text
-    passed as argument'''
+    """Same as display_html(text, True): prints the html formatted text
+    passed as argument"""
     display_html(what, raw=True)
 
 
 class EVALMETRICS(Enum):
-    '''Evaluation metrics enumeration. Each enum item is mapped to a string:
+    """Evaluation metrics enumeration. Each enum item is mapped to a string:
     `AUC` = 'roc_auc_score'
     `APS` = 'average_precision_score'
     `LOGLOSS` = 'log_loss'
@@ -101,7 +103,7 @@ class EVALMETRICS(Enum):
      and has a `compute` method
     (e.g., `EVALMETRICS.APS.compute(pred_df)`) which
     returns the metric scalar value from a prediction dataframe
-    '''
+    """
     # REMEMBER that EVALMETRICS(string) == EVALMETRICS(EVALMETRICS(string))
     APS = 'average_precision_score'
     F1MAX = 'f1_max'
@@ -116,7 +118,7 @@ class EVALMETRICS(Enum):
         return self.value
 
     def compute(self, pred_df):
-        '''Computes the value of this metric'''
+        """Computes the value of this metric"""
         return EVALMETRICS.computeall(pred_df, self)[0]
 #         y_true, y_pred = pred_df.outlier, pred_df.predicted_anomaly_score
 #         if self == EVALMETRICS.AUC:
@@ -200,7 +202,7 @@ def _reorder_eval_df_columns(eval_df, copy=True):
 
 
 def read_summary_eval_df(**kwargs):
-    '''`read_summary_eval_df(**kwargs)` = pandas
+    """`read_summary_eval_df(**kwargs)` = pandas
     `read_hdf('../evaluations/results/summary_evaluationmetrics.hdf', **kwargs)`
     reads and returns the Evaluation dataframe created and incremented by each
     execution of the main script `evaluate.py`. *Thus, if no
@@ -208,7 +210,7 @@ def read_summary_eval_df(**kwargs):
     and the Notebook using this module will not work.*
     Keyword arguments of the functions are the same keyword arguments as pandas
     `read_hdf`.
-    '''
+    """
     return read_eval_df('summary_evaluationmetrics.hdf', **kwargs)
     # dfr = pd.read_hdf(_abspath('summary_evaluationmetrics.hdf'), **kwargs)
     # # _key is the prediction dataframe path, relative to
@@ -236,11 +238,11 @@ def read_eval_df(path_or_name, **kwargs):
 
 
 def _abspath(evalresult_relpath):
-    '''Returns the absolute path of `evalresult_relpath` which is supposed
+    """Returns the absolute path of `evalresult_relpath` which is supposed
     to be relative of the evaluation result directory of this package.
     The latter exists only if some evaluation has
     been run
-    '''
+    """
     EVALPATH = join(dirname(dirname(__file__)), 'evaluations', 'results')
     return abspath(join(EVALPATH, evalresult_relpath))
 
@@ -253,35 +255,35 @@ if not isdir(_abspath('')):
 
 
 def load_clf(relativepath):
-    '''`load_clf(relativepath)` loads a classifier from a path relative to
+    """`load_clf(relativepath)` loads a classifier from a path relative to
     the evaluation directory of this package (where `evaluate.py` saved
     evaluation results)
-    '''
+    """
     return load(_abspath(relativepath))
 
 
 def read_pred_df(relativepath, **kwargs):
-    '''`red_pred_df(relativepath, **kwargs)` =
+    """`red_pred_df(relativepath, **kwargs)` =
     pandas `read_hdf('../evaluations/results' + relativepath, **kwargs)`
     reads and returns a Prediction dataframe created via the main script
     `evaluate.py`.
     The keyword argument `columns`, if not specified, defaults to the minimal
     `('outlier', 'predicted_anomaly_score')`. Pass None to load all columns, or
     a list of columns as in pandas documentation
-    '''
+    """
     kwargs.setdefault('columns', ('outlier', 'predicted_anomaly_score'))
     return pd.read_hdf(_abspath(relativepath), **kwargs)
 
 
 def samex(axes):
-    '''`samex(axes)` sets the same x limits on all matplotlib Axes provided
-    as argument'''
+    """`samex(axes)` sets the same x limits on all matplotlib Axes provided
+    as argument"""
     return _sameaxis(axes, 'x')
 
 
 def samey(axes):
-    '''`samey(axes)` sets the same x limits on all matplotlib Axes provided
-    as argument'''
+    """`samey(axes)` sets the same x limits on all matplotlib Axes provided
+    as argument"""
     return _sameaxis(axes, 'y')
 
 
@@ -340,10 +342,10 @@ def _get_fig_and_axes(show_argument, default_rows, default_columns,
 
 @contextlib.contextmanager
 def rcparams(rcparams=None, figsizeratio=(1, 1)):
-    '''`with rcparams(rcparams={}, figsizeratio=(1.0, 1.0)):`
+    """`with rcparams(rcparams={}, figsizeratio=(1.0, 1.0)):`
     makes temporarily matplotlib rcParams.
     Make sure to run this after %matplotlib inline.
-    For info see https://stackoverflow.com/questions/36367986/how-to-make-inline-plots-in-jupyter-notebook-larger'''
+    For info see https://stackoverflow.com/questions/36367986/how-to-make-inline-plots-in-jupyter-notebook-larger"""
     rcparams = rcparams or {}
     defparams = {k: plt.rcParams[k] for k in rcparams}
     figsize = 'figure.figsize'
@@ -383,13 +385,13 @@ def plot_feats_vs_evalmetrics(eval_df, evalmetrics=None,
                               mpl_rect_args=None,
                               mpl_plot_args=None,
                               show=True):
-    '''`plot_feats_vs_evalmetrics(eval_df, evalmetrics=None, ylabel=lambda metric:..., mpl_rect_args={}, mpl_plot_args={}, show=True)` plots the
+    """`plot_feats_vs_evalmetrics(eval_df, evalmetrics=None, ylabel=lambda metric:..., mpl_rect_args={}, mpl_plot_args={}, show=True)` plots the
     features of `eval_df` grouped and
     colored by PSD period counts versus the given `ems` (Evaluation metrics,
     passes as strings or `EVALMETRICS` enum items. None - the default -
     shows all possile metrics stored in a `eval_df`: Area under ROC curve,
     Average precision score, log loss)
-    '''
+    """
     # convert to EVALMETRICS instances:
     if evalmetrics is None:
         evalmetrics = [EVALMETRICS.APS, EVALMETRICS.AUC]
@@ -485,9 +487,9 @@ _DEFAULT_COLORMAP = None  # the default is ''cubehelix', see _get_colors
 
 # @contextlib.contextmanager
 # def _use_tmp_colormap(name):
-#     '''`with use_tmp_colormap(name)` changes temporarily the colormap. Useful
+#     """`with use_tmp_colormap(name)` changes temporarily the colormap. Useful
 #     before plotting
-#     '''
+#     """
 #     global _DEFAULT_COLORMAP  # pylint: disable=global-statement
 #     _ = _DEFAULT_COLORMAP
 #     _DEFAULT_COLORMAP = name
@@ -498,11 +500,11 @@ _DEFAULT_COLORMAP = None  # the default is ''cubehelix', see _get_colors
 
 
 def _get_colors(numcolors, min=None, max=None):
-    '''`get_colors(N)` returns N different colors for plotting
+    """`get_colors(N)` returns N different colors for plotting
     `get_colors(N, min, max)` does the same but colors are visible also in
     black and white. `min` in [0, 1] controls how dark is the darkest color,
     `max` in [0, 1] controls how "light" is the brightest color
-    '''
+    """
     if _DEFAULT_COLORMAP is None and min is None and max is None:
         # use tab10 as default colormap, returning 10 colors
         cmap = plt.get_cmap('tab10')
@@ -529,10 +531,10 @@ get_colors = _get_colors
 
 
 def _unique_sorted_features(eval_df):
-    '''`_unique_sorted_features(eval_df)` returns a list of sorted strings
+    """`_unique_sorted_features(eval_df)` returns a list of sorted strings
     representing the unique features of the DataFrame passed as argument.
     Features are sorted by number of PSD periods and if equal, by periods sum
-    '''
+    """
     feats = pd.unique(eval_df.feats)
 
     def sortfunc(feats):
@@ -544,10 +546,10 @@ def _unique_sorted_features(eval_df):
 
 
 def get_hyperparam_dfs(eval_df, evalmetric, **hyperparams):
-    '''`get_hyperparam_dfs(eval_df, evalmetric, hparam1=values, hparam2=values)`
+    """`get_hyperparam_dfs(eval_df, evalmetric, hparam1=values, hparam2=values)`
     returns the three dataframes min, median max where the axis are the two
     hyperparameters values and the cell value is the score min, median and max
-    '''
+    """
     # convert to EVALMETRICS instances:
     evalmetric = EVALMETRICS(evalmetric)
 
@@ -578,12 +580,12 @@ def get_hyperparam_dfs(eval_df, evalmetric, **hyperparams):
 
 def plot_hyperparam_dfs(df_min, df_median, df_max, ylabel=None,
                         mpl_plot_args=None, show=True):
-    '''`plot_hyperparam_dfs(df_min, df_median, df_max, ylabel=None, mpl_plot_args={}, show=True)`
+    """`plot_hyperparam_dfs(df_min, df_median, df_max, ylabel=None, mpl_plot_args={}, show=True)`
     plots the scores with the output of `get_hyperparam_dfs` producing
     `N` plots where for i=1 to N, the i-th plot displays the i-th row of
     dfmedian, dfmin, and dfmax are plotted (dfmin and dfmax as shaded area,
     dfmedian as scatter plot with lines on top)
-    '''
+    """
     hp_xname = df_min.columns.values[0][0]
     hp_yname = df_min.index.values[0][0]
     hp_xvals = [_[1] for _ in df_min.columns.values]
@@ -629,16 +631,16 @@ def plot_hyperparam_dfs(df_min, df_median, df_max, ylabel=None,
 
 
 def progressbar(length):
-    '''`pbar=progressabr(length)`, then into loop: `pbar.update(chunk)`.
+    """`pbar=progressabr(length)`, then into loop: `pbar.update(chunk)`.
     Emulates a progressbar for Python jupyter notebook only
     (`click.progressbar` does not work)
-    '''
+    """
 
     class t:
-        '''this class is a wrapper around a string redefining the __repr__
+        """this class is a wrapper around a string redefining the __repr__
         without leading and trailing single quotes ' so that display below
         does not shows them
-        '''
+        """
         def __init__(self, string):
             self.string = string
 
@@ -683,13 +685,13 @@ def progressbar(length):
 
 
 def get_pred_dfs(eval_df, postfunc=None, show_progress=True, **kwargs):
-    '''`get_pred_dfs(eval_df, postfunc=None, show_progress=True)` reads and
+    """`get_pred_dfs(eval_df, postfunc=None, show_progress=True)` reads and
     returns a dict of file paths mapped to the corresponding Prediction
     dataframe, for each evaluation (row) of `eval_df`. See also `get_eval_df`.
     `postfunc`, if supplied, is a `func(keytuple, pred_df)` called on each
     prediction dataframe read via `read_pred_df(keytuple.relative_filepath)`.
     `keytuple` is a namedtuple representing the `eval_df` fields of `pred_df`
-    '''
+    """
     pbar = progressbar(len(eval_df)) if show_progress else None
     pred_dfs = {}
     for eval_namedtuple in eval_df.itertuples(index=False, name='Evaluation'):
@@ -704,14 +706,14 @@ def get_pred_dfs(eval_df, postfunc=None, show_progress=True, **kwargs):
 
 
 def get_eval_df(pred_dfs, evalmetrics=None, show_progress=True):
-    '''`get_eval_df(pred_dfs, evalmetrics=None, show_progress=True)` returns
+    """`get_eval_df(pred_dfs, evalmetrics=None, show_progress=True)` returns
     an Evaluation dataframe
     computed on all the Prediction dataframes `pred_dfs`. See also
     `get_pred_dfs`. Once the original `eval_df` has been retireved,
     (`read_summary_eval_df()`) a user can go back and forth in a Notebook to
     retrieve the prediction dataframes (`get_pred_dfs`) and compute new
     evaluation metrics on them with this function (see `EVALMETRICS`).
-    '''
+    """
     # convert to EVALMETRICS instances:
     if evalmetrics is None:
         evalmetrics = [EVALMETRICS.APS, EVALMETRICS.F1MAX, EVALMETRICS.AUC]
@@ -744,13 +746,13 @@ def get_eval_df(pred_dfs, evalmetrics=None, show_progress=True):
 
 
 def _rank_eval(eval_df, evalmetrics, columns=None, mean='hmean'):
-    '''`rank_eval(eval_df, evalmetrics, columns=None, mean='hmean')` returns
+    """`rank_eval(eval_df, evalmetrics, columns=None, mean='hmean')` returns
     a dict with each metric in `metrics` mapped to an Evaluation dataframe
     with the metric scores sorted descending. `columns` is optional and used
     to group rows of `eval_df` first merging them into a single-row dataframe
     with the metric column reporting the computed `mean` ('hmean' for harmonic
     mean, 'mean' for arithmetic mean, or 'median') on that group.
-    '''
+    """
     # convert to EVALMETRICS instances:
     evalmetrics = [EVALMETRICS(_) for _ in evalmetrics]
 
@@ -822,13 +824,13 @@ def _rank_eval(eval_df, evalmetrics, columns=None, mean='hmean'):
 
 def plot_freq_distribution(pred_df, axs, bins=None, title=None,
                            mpl_hist_args=None):
-    '''`plot_freq_distribution(pred_dfs, ncols=None, titles=str, mpl_hist_args=None, show=True)`
+    """`plot_freq_distribution(pred_dfs, ncols=None, titles=str, mpl_hist_args=None, show=True)`
     plots the segments frequency distribution (histogram) for the two classes
     'inliers' and 'outliers'. `pred_dfs` is a dict of keys mapped to
     a prediction dataframe (see e.g. output of `get_pred_dfs`). `titles` is
     a function that will be called on each key of `pred_dfs` and should return
     a string. If missing, it defaults to `str(key)`
-    '''
+    """
     mpl_hist_args = mpl_hist_args or {}
     for k, v in dict(density=False, log=False, stacked=False,
                      rwidth=.75).items():
@@ -904,10 +906,10 @@ def plot_freq_distribution(pred_df, axs, bins=None, title=None,
 
 
 def argwhere_array_equals_value(array, value):
-    '''`argwhere_array_equals_value(array, value)` = numpy array of integers
+    """`argwhere_array_equals_value(array, value)` = numpy array of integers
     finds where array equals value, approximating with linear interpolation
     the zones where array crosses `value`
-    '''
+    """
     # https://stackoverflow.com/a/48901879
 
     # Find where sign of array - value is changing:
@@ -926,9 +928,9 @@ from obspy.signal.spectral_estimation import get_nlnm, get_nhnm  # @IgnorePep8
 
 
 def get_petterson_bounds(periods):
-    '''`get_petterson_bounds([p1, ...pN])` -> [lowbound1, ... lowboundN], [highbound1, ..., highboundN]
+    """`get_petterson_bounds([p1, ...pN])` -> [lowbound1, ... lowboundN], [highbound1, ..., highboundN]
     `get_petterson_bounds(p)` -> lowbound, highbound
-    '''
+    """
     l_periods, l_psd = get_nlnm()
     h_periods, h_psd = get_nhnm()
     periodz = np.log10(periods)
@@ -937,12 +939,12 @@ def get_petterson_bounds(periods):
 
 
 def read_handlabelled_channels():
-    '''`read_handlabelled()` reads the annotated segments
+    """`read_handlabelled()` reads the annotated segments
     from a dedicated directory and returns a dataframe with
     columns: dataset_id (int), start_time (datetime), end_time (datetime),
     outlier (bool), station_id (int)
     location_code (str), channel_code (str)
-    '''
+    """
     _root = join(expanduser('~'), 'Nextcloud', 'rizac', 'outliers_paper')
     annotations = [join(_root, _)
                    for _ in ['0.75_0.85_dino.csv',
@@ -976,11 +978,11 @@ def read_handlabelled_channels():
 
 
 def read_handlabelled_segments():
-    '''`read_handlabelled()` reads the annotated segments
+    """`read_handlabelled()` reads the annotated segments
     from a dedicated directory and returns a dataframe with
     columns: dataset_id (int), 'Segment.db.id' (int), 'outlier' (bool, always
     True)
-    '''
+    """
     # set datetime to not be null:
     _root = join(expanduser('~'), 'Nextcloud', 'rizac', 'outliers_paper')
     single_annots = [join(_root, _) for _ in ['lista_1_out_dino',
@@ -1055,13 +1057,13 @@ def heatmap_df(dfr, col_x, col_y, bins_x=10, bins_y=10):
 # def plot_1dclf_scores_vs_psdperiods(clf, axs, xaxis_periods=None, title=None,
 #                                     mp_hist_kwargs=None, petterson_period=None,
 #                                     petterson_mp_kwargs=None):
-#     '''`plot_freq_distribution(pred_dfs, ncols=None, titles=str, mp_hist_kwargs=None, show=True)`
+#     """`plot_freq_distribution(pred_dfs, ncols=None, titles=str, mp_hist_kwargs=None, show=True)`
 #     plots the segments frequency distribution (histogram) for the two classes
 #     'inliers' and 'outliers'. `pred_dfs` is a dict of keys mapped to
 #     a prediction dataframe (see e.g. output of `get_pred_dfs`). `titles` is
 #     a function that will be called on each key of `pred_dfs` and should return
 #     a string. If missing, it defaults to `str(key)`
-#     '''
+#     """
 #     if xaxis_periods is None:
 #         xaxis_periods = np.arange(-250, 0, 0.1)
 # 
@@ -1117,13 +1119,13 @@ def heatmap_df(dfr, col_x, col_y, bins_x=10, bins_y=10):
 
 def plot_pre_rec_fscore(pred_df, axs, title=None,
                         mpl_plot_args=None):
-    '''`plot_pre_rec_fscore(pred_dfs, ncols=None, titles=str, mp_plot_kwargs=None, show=True)`
+    """`plot_pre_rec_fscore(pred_dfs, ncols=None, titles=str, mp_plot_kwargs=None, show=True)`
     plots the segments frequency distribution (histogram) for the two classes
     'inliers' and 'outliers'. `pred_dfs` is a dict of keys mapped to
     a prediction dataframe (see e.g. output of `get_pred_dfs`). `titles` is
     a function that will be called on each key of `pred_dfs` and should return
     a string. If missing, it defaults to `str(key)`
-    '''
+    """
     mpl_plot_args = mpl_plot_args or {}
     # mp_plot_kwargs.setdefault('linewidth', 2)
 
@@ -1187,8 +1189,8 @@ def plot_pre_rec_fscore(pred_df, axs, title=None,
 
 
 def f1scores(pre, rec):
-    '''`f1scores(pre, rec)` returns a numpy array of the f1scores calculated
-    element-wise for each precision and recall'''
+    """`f1scores(pre, rec)` returns a numpy array of the f1scores calculated
+    element-wise for each precision and recall"""
     f1_ = np.zeros(len(pre), dtype=float)
     isfinite = (pre != 0) & (rec != 0)
     f1_[isfinite] = hmean(np.array([pre[isfinite], rec[isfinite]]), axis=0)
@@ -1196,8 +1198,8 @@ def f1scores(pre, rec):
 
 
 def grid4plot(numaxes, ncols=None):
-    '''`plotgrid(numaxes, ncols=None)` returns the tuple (rows, cols) of
-    integers denoting the optimal grid to display the given axes in a plot'''
+    """`plotgrid(numaxes, ncols=None)` returns the tuple (rows, cols) of
+    integers denoting the optimal grid to display the given axes in a plot"""
     # get best row/col grid:
     _ = np.ceil(np.sqrt(numaxes))
     assert _ ** 2 >= numaxes
@@ -1219,7 +1221,7 @@ def grid4plot(numaxes, ncols=None):
 
 
 def printdoc():
-    '''Prints this table as HTML formatted text (to be used in a Notebook)'''
+    """Prints this table as HTML formatted text (to be used in a Notebook)"""
 
     # print this doc. Skip all things outside wrapping '---'
     thisdoc = "\n\n" + __doc__[__doc__.find('---') + 3:__doc__.rfind('---')]

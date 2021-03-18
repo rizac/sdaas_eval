@@ -1,16 +1,15 @@
-# Added by me
+# EVERYTHING STARTING WITH THE UNDERSCORE IS GITIGNORED:
+_*
+# tmop old files and directories:
 tmp/
 old/
+old.*
+tmp.*
+# this config inside the jupyter should have the db passwords:
 jnconfig.yaml
-*.model
-*.sklmodel
-*.hdf
+# macOS Eclipse stuff:
 .DS_Store
 .idea/
-# these plot files are kind of problematic: they should be ignored (too big)
-# but are kind of relevant and putting them in tmp/ or old/ might hide them
-# from copies. Need to find a solution:
-Plot.allset_unlabelled.*.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

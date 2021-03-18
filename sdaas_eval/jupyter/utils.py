@@ -25,6 +25,7 @@ Created on 18 Mar 2020
 
 @author: rizac(at)gfz-potsdam.de
 """
+
 from os.path import (join, abspath, dirname, isfile, isdir, basename, dirname,
                      splitext, expanduser, isabs)
 import sys
@@ -52,13 +53,114 @@ from ..core.psd import psd_values
 from stream2segment.process.db import Segment, Station, get_session as g_s
 import yaml
 
-# for printing, we can do this:
-# with pd.option_context('display.max_rows', -1, 'display.max_columns', 5):
-# or we simply set once here the max_col_width
-pd.set_option('display.max_colwidth', 500)
-pd.set_option('display.max_columns', 500)
+
+def setup():
+    setup_pandas_defaults()
+    setup_matplotlib_defaults()
+    printdoc()
 
 
+def setup_pandas_defaults():
+    printhtml('Setting pandas defaults')
+    # for printing, we can do this:
+    # with pd.option_context('display.max_rows', -1, 'display.max_columns', 5):
+    # or we simply set once here the max_col_width
+    opts = {
+        'display.max_colwidth': 500,
+        'display.max_columns': 500,
+        'display.max_rows': 25
+    }
+    display(pd.DataFrame(index=opts.keys(), data=opts.values(), columns=['Value']))
+    for key, val in opts.items():
+        pd.set_option(key, val)
+
+
+def setup_matplotlib_defaults():
+    printhtml('Setting matplotlib defaults')
+    font_size = 10
+    opts = {
+        'figure.figsize': (6.29922, 6.29922),  # 16 cm 6.5, 6.105
+        'lines.linewidth': 1.5,
+        'font.size': font_size,
+        'axes.titlesize': font_size,
+        'figure.dpi': 300,
+        'font.family': 'sans-serif'
+    }
+    display(pd.DataFrame(index=opts.keys(), data=[str(_) for _ in opts.values()],
+                         columns=['Value']))
+    for key, val in opts.items():
+        plt.rcParams[key] = val
+
+
+def printdoc():
+    """Prints this table as HTML formatted text (to be used in a Notebook)"""
+
+    printhtml(f'<h4>`{__name__}` cheat sheet</h4>')
+    # print this doc. Skip all things outside wrapping '---'
+    thisdoc = "\n\n" + __doc__[__doc__.find('---') + 3:__doc__.rfind('---')]
+    thisdoc += ('\n\nGiven the above definitions, `%s` imported the '
+                'following functions/classes/modules '
+                'that you can use in this Notebook:') % __name__
+    thisdoc = re.sub(r'\*\*([^\*]+)\*\*', r'<b>\1</b>', thisdoc)
+    thisdoc = re.sub(r'\*([^\*]+)\*', r'<i>\1</i>', thisdoc)
+    thisdoc = re.sub('`([^`]+)`', r'<code>\1</code>', thisdoc)
+    thisdoc = re.sub('\n\n+', r'<p>', thisdoc)
+
+    __ret = ("<div style='width:100%;border:1px solid #ddd;overflow:auto;"
+             "max-height:40rem'>" + thisdoc + "<table>")
+
+    # re_pattern = re.compile(r'^(.*?)(?:\.\s|\n)')
+    for pyobjname, pyobj in globals().items():
+        if pyobjname[:1] != '_':
+            pyobjname = pyobjname.replace('<', '&lt;').replace('>', '&gt;')
+            doc = str(pyobj)
+            # if pyobj is not a variable, then print its doc
+            ismod, ismeth, isclass, isfunc = \
+                (inspect.ismodule(pyobj), inspect.isclass(pyobj),
+                 inspect.ismethod(pyobj), inspect.isfunction(pyobj))
+            if (ismod or isclass or ismeth or isfunc):
+                doc = inspect.getdoc(pyobj) or ''
+                # if it's a module or it's imported (not defined here), just
+                # show the first part of the doc (up to dot+space or newline):
+                if ismod or pyobj.__module__ != __name__:
+                    mtch = re.search(r'^(.*?)(?:\.\s|\n)', doc)
+                    doc = mtch.group(1) if mtch else doc
+                elif not ismod:
+                    # is something implemented here, not a simple variable
+                    # (method, class, function). wrap `...` in <code> tags:
+                    doc = re.sub('`([^`]+)`', r'<code>\1</code>', doc)
+            __ret += "<tr><td>%s</td><td>%s</td></tr>" % (pyobjname, doc)
+    __ret += '</table></div>'
+    printhtml(__ret)
+
+
+def savefig(fig, filepath, verbose=True): #noqa
+    """Save a figure for the paper in a dedicated folder. The format will be
+    inferred from the file path extension
+    """
+    if not isdir(dirname(filepath)):
+        if verbose:
+            printhtml(f'Cannot save figure, parent directory does not exist: '
+                      f'"{filepath}"')
+        return False
+    format_ = splitext(basename(filepath))[1][1:].lower()
+    formats = ['png', 'pdf', 'ps', 'eps', 'svg']
+    try:
+        import PIL
+        formats += ['jpg', 'jpeg']
+    except ImportError:
+        pass
+    if format_ not in formats:
+        if verbose:
+            printhtml(f'Cannot save figure. Format not in {formats}')
+        return False
+    dpi = plt.rcParams["figure.dpi"]
+    printhtml(f'Saving figure to "{filepath}"')
+    printhtml(f'dpi:    {dpi} '
+              f'width:  {plt.rcParams["figure.figsize"][0]:.2f} '
+              f'height: {plt.rcParams["figure.figsize"][1]:.2f})')
+    fig.savefig(filepath, dpi=dpi, format=format_)
+    return True
 
 
 @contextlib.contextmanager
@@ -120,35 +222,6 @@ class EVALMETRICS(Enum):
     def compute(self, pred_df):
         """Computes the value of this metric"""
         return EVALMETRICS.computeall(pred_df, self)[0]
-#         y_true, y_pred = pred_df.outlier, pred_df.predicted_anomaly_score
-#         if self == EVALMETRICS.AUC:
-#             return metrics.roc_auc_score(y_true, y_pred)
-#         if self == EVALMETRICS.APS:
-#             return metrics.average_precision_score(y_true, y_pred)
-#         if self in (EVALMETRICS.F1MAX, EVALMETRICS.BEST_TH_PR):
-#             pre, rec, thr = metrics.precision_recall_curve(y_true, y_pred)
-#             fscores = f1scores(pre, rec)
-#             argmax = np.argmax(fscores)
-#             if self == EVALMETRICS.BEST_TH_PR:
-#                 # From the doc: "the last precision and recall values are 1.
-#                 # and 0. respectively, and do not have a corresponding
-#                 # threshold". Thus if argmax is = len(fscores)-1 we have a
-#                 # problem, but this can never happen because f1scores[-1] = 0
-#                 return thr[argmax]
-#             return fscores[argmax]
-# #         if self == EVALMETRICS.BEST_TH_ROC:
-# #             fpr, tpr, thr = metrics.roc_curve(y_true, y_pred)
-# #             # compute the harmonic mean element-wise, i.e. f1scores(tpr, tnr):
-# #             fscores = f1scores(tpr, 1-fpr)
-# #             # from the doc: "thr[0] represents no instances being predicted
-# #             # and is arbitrarily set to max(y_score) + 1.". Thus we do not
-# #             # want to return it, which should never happen becuase scores[0]
-# #             # will never be the max, as tpr[0] = 0. However, for safety:
-# #             argmax = np.argmax(fscores[1:])
-# #             return thr[1 + argmax]
-#         if self == EVALMETRICS.LOGLOSS:
-#             return metrics.log_loss(y_true, y_pred)
-#         raise ValueError('something wrong in EVALMETRIS.compute')
 
     @classmethod
     def computeall(cls, pred_df, *evalmetrics):
@@ -1220,52 +1293,13 @@ def grid4plot(numaxes, ncols=None):
     return rows, cols
 
 
-def printdoc():
-    """Prints this table as HTML formatted text (to be used in a Notebook)"""
-
-    # print this doc. Skip all things outside wrapping '---'
-    thisdoc = "\n\n" + __doc__[__doc__.find('---') + 3:__doc__.rfind('---')]
-    thisdoc += ('\n\nGiven the above definitions, `%s` imported the '
-                'following functions/classes/modules '
-                'that you can use in this Notebook:') % __name__
-    thisdoc = re.sub(r'\*\*([^\*]+)\*\*', r'<b>\1</b>', thisdoc)
-    thisdoc = re.sub(r'\*([^\*]+)\*', r'<i>\1</i>', thisdoc)
-    thisdoc = re.sub('`([^`]+)`', r'<code>\1</code>', thisdoc)
-    thisdoc = re.sub('\n\n+', r'<p>', thisdoc)
-
-    __ret = ("<div style='width:100%;border:1px solid #ddd;overflow:auto;"
-             "max-height:40rem'>" + thisdoc + "<table>")
-
-    # re_pattern = re.compile(r'^(.*?)(?:\.\s|\n)')
-    for pyobjname, pyobj in globals().items():
-        if pyobjname[:1] != '_':
-            pyobjname = pyobjname.replace('<', '&lt;').replace('>', '&gt;')
-            doc = str(pyobj)
-            # if pyobj is not a variable, then print its doc
-            ismod, ismeth, isclass, isfunc = \
-                (inspect.ismodule(pyobj), inspect.isclass(pyobj),
-                 inspect.ismethod(pyobj), inspect.isfunction(pyobj))
-            if (ismod or isclass or ismeth or isfunc):
-                doc = inspect.getdoc(pyobj) or ''
-                # if it's a module or it's imported (not defined here), just
-                # show the first part of the doc (up to dot+space or newline):
-                if ismod or pyobj.__module__ != __name__:
-                    mtch = re.search(r'^(.*?)(?:\.\s|\n)', doc)
-                    doc = mtch.group(1) if mtch else doc
-                elif not ismod:
-                    # is something implemented here, not a simple variable
-                    # (method, class, function). wrap `...` in <code> tags:
-                    doc = re.sub('`([^`]+)`', r'<code>\1</code>', doc)
-            __ret += "<tr><td>%s</td><td>%s</td></tr>" % (pyobjname, doc)
-    __ret += '</table></div>'
-    printhtml(__ret)
-
-
 if __name__ == "__main__":
-    dfr = pd.DataFrame({'mag': [1, 1, 3, 5, 10], 'dist': [0, 1, 0, 1, 0]})
-    ret = heatmap_df(dfr, 'mag', 'dist', np.arange(5), np.arange(5))
-    pd.set_option('max_rows', 200)
-    print(ret.to_string())
+    pass
+    # dfr = pd.DataFrame({'mag': [1, 1, 3, 5, 10], 'dist': [0, 1, 0, 1, 0]})
+    # ret = heatmap_df(dfr, 'mag', 'dist', np.arange(5), np.arange(5))
+    # pd.set_option('max_rows', 200)
+    # print(ret.to_string())
+
 # printdoc()
 
 # EVALPATH HIDDEN

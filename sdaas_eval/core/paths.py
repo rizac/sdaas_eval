@@ -9,7 +9,7 @@ Created on 13 Nov 2019
 from os.path import abspath, join, dirname
 
 
-DATASETS_DIR = abspath(join(dirname(__file__), '..', 'datasets'))
+DATASETS_DIR = abspath(join(dirname(__file__), '..', '_datasets'))
 
 
 _EVALUATIONS_ROOT = abspath(join(dirname(__file__), '..', 'evaluations'))
@@ -18,4 +18,4 @@ _EVALUATIONS_ROOT = abspath(join(dirname(__file__), '..', 'evaluations'))
 EVALUATIONS_CONFIGS_DIR = abspath(join(_EVALUATIONS_ROOT, 'configs'))
 
 
-EVALUATIONS_RESULTS_DIR = abspath(join(_EVALUATIONS_ROOT, 'results'))
+EVALUATIONS_RESULTS_DIR = abspath(join(_EVALUATIONS_ROOT, 'tmp.results'))

@@ -50,7 +50,7 @@ import importlib
 from matplotlib.ticker import MultipleLocator
 
 from ..core.psd import psd_values
-from stream2segment.process.db import Segment, Station, get_session as g_s
+from stream2segment.process.db import Segment, Station, Event, get_session as g_s
 import yaml
 
 
@@ -321,10 +321,10 @@ def _abspath(evalresult_relpath):
 
 
 # check:
-if not isdir(_abspath('')):
-    raise ValueError('The evaluation directory and could not be found. '
-                     'Have you run some evaluations on this machine '
-                     '(script `evaluate.py`)?')
+# if not isdir(_abspath('')):
+#     raise ValueError('The evaluation directory could not be found. '
+#                      'Have you run some evaluations on this machine '
+#                      '(script `evaluate.py`)?')
 
 
 def load_clf(relativepath):

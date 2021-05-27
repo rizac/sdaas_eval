@@ -3,6 +3,7 @@ _*
 # tmop old files and directories:
 tmp/
 old/
+gitignored/
 old.*
 tmp.*
 .DS_Store

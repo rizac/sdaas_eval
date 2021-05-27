@@ -83,12 +83,13 @@ pyzmq==22.0.3
 qtconsole==5.0.3
 QtPy==1.9.0
 requests==2.25.1
-scikit-learn==0.24.1
+scikit-learn==0.24.2
 scipy==1.6.1
+-e git+https://github.com/rizac/sdaas.git@2410f30682a8fb0f78ff786d0cf85ef087023b58#egg=sdaas
 Send2Trash==1.5.0
 six==1.15.0
 SQLAlchemy==1.4.0
--e git+https://github.com/rizac/stream2segment.git@4b3e42758efae43eb248d03d6ea14e1b62d134a1#egg=stream2segment
+-e git+https://github.com/rizac/stream2segment.git@b14b0812f10f9a1c3904c3d2097b0b444123773a#egg=stream2segment
 tables==3.6.1
 terminado==0.9.3
 testpath==0.4.4

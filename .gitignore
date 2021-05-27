@@ -5,6 +5,7 @@ tmp/
 old/
 old.*
 tmp.*
+.DS_Store
 # this config inside the jupyter should have the db passwords:
 jnconfig.yaml
 # macOS Eclipse stuff:

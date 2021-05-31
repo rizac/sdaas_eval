@@ -1,7 +1,7 @@
-###############################################
-# Download id: 1 (2019-12-02 10:13:40.192252) #
-###############################################
-dburl: postgresql://rizac:***@localhost/accelerometers
+#############################################################
+# Db: sod_chile Download id: 1 (2019-12-02 10:13:40.192252) #
+#############################################################
+dburl: postgresql://me:***@localhost/accelerometers
 starttime: 1999-01-01 00:00:00
 endtime: 0  # <- yesterday at midnight
 eventws: http://seismicportal.eu/fdsnws/event/1/query

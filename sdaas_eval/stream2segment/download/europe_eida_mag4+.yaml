@@ -1,0 +1,56 @@
+################################################################
+# Db: s2s_2020_05 Download id: 47 (2021-04-16 21:35:20.549524) #
+################################################################
+dburl: postgresql://me:***@localhost/accelerometers
+starttime: 1999-01-01 00:00:00
+endtime: 0  # <- yesterday at midnight
+eventws: isc
+minlatitude: 33.0
+maxlatitude: 71.0
+minlongitude: -12.0
+maxlongitude: 46.0
+mindepth: 0
+maxdepth: 50
+minmagnitude: 4
+maxmagnitude: null
+eventws_params: null
+dataws:
+  - eida
+  # - iris
+network:  ['BS', 'CH', 'FR', 'GE', 'GU', 'HI', 'HL', 'HP', 'IV', 'MN', 'OX', 'RA']
+station: ['BLKB', 'VETAM', 'DIX', 'FUSIO', 'MMK', 'ESCA', 'MON', 'PYLO', 'SAOF', 'KARP', 'FIVI', 'KRI1', 'DION', 'GVD', 'KASA', 'MGNA', 'NOAC', 'PATC', 'PRK', 'YDRA', 'ANX', 'FSK', 'ATPC', 'ATVO', 'BORM', 'CAFE', 'FOSV', 'LTRZ', 'MCEL', 'MGAB', 'PIO1', 'RM05', 'RM10', 'SFI', 'SIRI', 'T0502', 'T0711', 'ZEN8', 'BLY', 'PDG', 'TUE', 'CGRP', 'BELV']
+location: '*'
+channel:
+  - HN?
+  - HL?
+  - HG?
+min_sample_rate: 60
+inventory: true
+update_metadata: false
+search_radius:
+  minmag: 3.5
+  maxmag: 5.5
+  minmag_radius: 5
+  maxmag_radius: 5
+timespan:
+  - 0.1  # 6 seconds before the theoretical arrival time
+  - 3.0  # 3 minutes afterwards
+restricted_data: ''
+retry_seg_not_found: true
+retry_url_err: true
+retry_mseed_err: false
+retry_client_err: true
+retry_server_err: true
+retry_timespan_err: true
+traveltimes_model: ak135_ttp+
+advanced_settings:
+  routing_service_url: http://www.orfeus-eu.org/eidaws/routing/1/query
+  max_concurrent_downloads: 2
+  e_timeout: 120
+  s_timeout: 120
+  i_timeout: 60
+  w_timeout: 30
+  download_blocksize: 1048576
+  db_buf_size: 100
+
+

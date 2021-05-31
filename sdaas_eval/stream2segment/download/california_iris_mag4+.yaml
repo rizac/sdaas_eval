@@ -1,7 +1,7 @@
-###############################################
-# Download id: 8 (2020-01-02 13:49:32.082339) #
-###############################################
-dburl: postgresql://rizac:***@localhost/accelerometers
+###############################################################
+# Db: california2 Download id: 8 (2020-01-02 13:49:32.082339) #
+###############################################################
+dburl: postgresql://me:***@localhost/accelerometers
 starttime: 1999-01-01 00:00:00
 endtime: 0  # <- yesterday at midnight
 eventws: http://service.iris.edu/fdsnws/event/1/query

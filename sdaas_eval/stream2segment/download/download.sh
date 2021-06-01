@@ -1,14 +1,18 @@
-DBPATH="postgresql://me:***@localhost/accelerometers"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-s2s download -d $DBPATH -c ./europe_eida --minmagnitude 4 --start 1999-01-01T00:00:00
-s2s download -d $DBPATH -c ./chile_geofon --minmagnitude 4 --start 1999-01-01T00:00:00
-s2s download -d $DBPATH -c ./california_iris --minmagnitude 4 --start 1999-01-01T00:00:00
+# DBPATH="postgresql://me:***@localhost/accelerometers"
+DBPATH="sqlite:///${SCRIPT_DIR}/accelerometers"
+ARGS="--print-config-only"
 
-s2s download -d $DBPATH -c ./europe_eida --minmagnitude 2.5 --maxmagnitude 4 --start 365
-s2s download -d $DBPATH -c ./chile_geofon --minmagnitude 2.5 --maxmagnitude 4 --start 365
-s2s download -d $DBPATH -c ./california_iris --minmagnitude 2.5 --maxmagnitude 4 --start 365
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/europe_eida.yaml --minmagnitude 4 --start 1999-01-01T00:00:00 "$ARGS"
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/chile_geofon.yaml --minmagnitude 4 --start 1999-01-01T00:00:00 "$ARGS"
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/california_iris.yaml --minmagnitude 4 --start 1999-01-01T00:00:00 "$ARGS"
 
-s2s download -d $DBPATH -c ./europe_eida --minmagnitude 4 -w 2.1 "-0.1" --start 365
-s2s download -d $DBPATH -c ./chile_geofon --minmagnitude 4 -w 2.1 "-0.1" --start 365
-s2s download -d $DBPATH -c ./california_iris --minmagnitude 4 -w 2.1 "-0.1" --start 365
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/europe_eida.yaml --minmagnitude 2.5 --maxmagnitude 4 --start 2020-01-01 "$ARGS"
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/chile_geofon.yaml --minmagnitude 2.5 --maxmagnitude 4 --start 2020-01-01 "$ARGS"
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/california_iris.yaml --minmagnitude 2.5 --maxmagnitude 4 --start 2020-01-01 "$ARGS"
+
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/europe_eida.yaml --minmagnitude 4 -w 2.1 "-0.1" --start 2020-01-01 "$ARGS"
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/chile_geofon.yaml --minmagnitude 4 -w 2.1 "-0.1" --start 2020-01-01 "$ARGS"
+s2s download -d $DBPATH -c "$SCRIPT_DIR"/california_iris.yaml --minmagnitude 4 -w 2.1 "-0.1" --start 2020-01-01 "$ARGS"
 

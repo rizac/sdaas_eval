@@ -5,10 +5,10 @@ dburl: postgresql://me:***@localhost/accelerometers
 starttime: 1999-01-01 00:00:00
 endtime: 0  # <- yesterday at midnight
 eventws: http://service.iris.edu/fdsnws/event/1/query
-minlatitude: 35.25
-maxlatitude: 36.5
-minlongitude: -118.0
-maxlongitude: -116.5
+minlatitude: 35
+maxlatitude: 42
+minlongitude: -125
+maxlongitude: -114
 mindepth: 0
 maxdepth: 40
 minmagnitude: 4
@@ -16,8 +16,8 @@ maxmagnitude: null
 eventws_params: null
 dataws:
   - iris
-  - http://service.ncedc.org/fdsnws/dataselect/1/
-  # - http://service.scedc.caltech.edu/fdsnws/dataselect/1/
+  - http://service.scedc.caltech.edu/fdsnws/dataselect/1/
+  # - http://service.ncedc.org/fdsnws/dataselect/1/
 network:
   - CI
   - CE
@@ -31,7 +31,7 @@ min_sample_rate: 60
 inventory: true
 update_metadata: false
 search_radius:
-  max: 5
+  max: 6
   min: 0
 timespan:
 - 0.1  # 6 seconds before the theoretical arrival time

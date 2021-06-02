@@ -17,14 +17,5 @@ where
  - ${did} = download id (integer)
  
 
-TODO. Check
-
-ALL:
- - check minsamplerate, depths
- - HL? is accelerometer?
- - is search radius 5 too short if we want to split training in [0-100] [100-500] [500-1000]?
-
-CALIFORNIA: 
- - ndec o sdec?
- - latlng bounds are not too strict?
+<!-- split training in [0-80] [80-200] [200+] -->
  

@@ -322,14 +322,14 @@ def main(segment, config):
         ret['psd_%ss' % str(per)] = val
     ret['outlier'] = False  # change if labelled dataset (by default no labels)
     ret['evt_dist_deg'] = segment.event_distance_deg        # dist
-    ret['duration_sec'] = trace.stats.endttime - trace.stats.starttime
+    ret['duration_sec'] = trace.stats.endtime - trace.stats.starttime
     # ret['url'] = segment.data_center.dataselect_url
     ret['evt_id'] = segment.event.id
     ret['evt_url'] = segment.event.url
     ret['sta_id'] = segment.station.id
     ret['sta_url'] = segment.station.url
-    ret['dc_id'] = segment.data_center.id
-    ret['dc_url'] = segment.data_center.dataselect_url
+    ret['dc_id'] = segment.datacenter.id
+    ret['dc_url'] = segment.datacenter.dataselect_url
     net, sta, loc, cha = segment.data_seed_id.split('.')
     ret['loc'] = loc or ''
     ret['cha'] = cha
@@ -349,25 +349,25 @@ def append_instance(store, instance, evts, stas, dcs):
     evt_id, evt_url = instance['evt_id'], instance.pop('evt_url')
     mag, mag_type = instance.pop('mag'), instance.pop('mag_type')
     if evt_id not in evts:
-        stas.add(evt_id)
-        store.append('events', pd.Series({'id': evt_id, 'url': evt_url,
-                                          'mag': mag,
-                                          'mag_type': mag_type}),
+        evts.add(evt_id)
+        store.append('events', pd.DataFrame([{'id': evt_id, 'url': evt_url,
+                                              'mag': mag,
+                                              'mag_type': mag_type}]),
                      format='table', min_itemsize={'url': 100})
 
-    sta_id, sta_url = instance['station_id'], instance.pop('station_url')
+    sta_id, sta_url = instance['sta_id'], instance.pop('sta_url')
     if sta_id not in stas:
         stas.add(sta_id)
-        store.append('stations', pd.Series({'id': sta_id, 'url': sta_url}),
+        store.append('stations', pd.DataFrame([{'id': sta_id, 'url': sta_url}]),
                      format='table', min_itemsize={'url': 120})
 
-    dc_id, dc_url = instance['datacenter_id'], instance.pop('datacenter_url')
+    dc_id, dc_url = instance['dc_id'], instance.pop('dc_url')
     if dc_id not in dcs:
         dcs.add(dc_id)
-        store.append('data_centers', pd.Series({'id': dc_id, 'url': dc_url}),
+        store.append('data_centers', pd.DataFrame([{'id': dc_id, 'url': dc_url}]),
                      format='table', min_itemsize={'url': 90})
 
-    store.append('waveforms', pd.Series(instance),
+    store.append('waveforms', pd.DataFrame([instance]),
                  format='table', min_itemsize={'loc': 2, 'cha': 3})
 
 
@@ -379,7 +379,7 @@ if __name__ == "__main__":
     # Example code TO BE EDITED before run
     # ------------------------------------
     config = yaml_load(os.path.join(root, 'features_extractor.yaml'))
-    dburl = yaml_load('enter_the_path_of_the_download_config_used_here')['dburl']
+    dburl = yaml_load(os.path.join(root, 'dburl.private.yaml'))['dburl']
     # segments to process (modify according to your needs). The variable
     # can also be a numeric list/numpy array of integers denoting the ID of
     # the segments to process. You can also read the selection from file or extract it
@@ -387,11 +387,11 @@ if __name__ == "__main__":
     segments_selection = config['segments_selection']
 
     # output file
-    outfile = os.path.join(root, 'accelerometers_db_features.hdf')
+    outfile = os.path.join(root, dburl[dburl.rfind('/')+1:] + '.hdf')
     # provide a log file path to track all skipped segment (SkipSegment exceptions).
     # Here we input the boolean True, which automatically creates a log file in the
     # same directory 'outfile' above. To skip logging, provide an empty string
-    logfile = True
+    logfile = outfile + '.log'
     # show progressbar on the terminal and additional info
     verbose = True
     # overwrite existing outfile, if present. If True and outfile exists, already
@@ -411,12 +411,15 @@ if __name__ == "__main__":
 
     evts, stas, dcs = set(), set(), set()
     with pd.HDFStore(outfile, 'w') as store:
-        for result in imap(main, dburl, segments_selection=segments_selection,
-                           config=config,
-                           logfile=logfile, verbose=verbose,
-                           multi_process=multiprocess,
-                           chunksize=None):
-            append_instance(store, result, evts, stas, dcs)
+        try:
+            for result in imap(main, dburl, segments_selection=segments_selection,
+                               config=config,
+                               logfile=logfile, verbose=verbose,
+                               multi_process=multiprocess,
+                               chunksize=None):
+                append_instance(store, result, evts, stas, dcs)
+        finally:
+            store.close()
 
 
 ######################################

@@ -332,8 +332,6 @@ def main(segment, config):
     ret['dc_url'] = segment.datacenter.dataselect_url
     net, sta, loc, cha = segment.data_seed_id.split('.')
     ret['loc'] = loc or ''
-    if len(loc) > 2:
-        raise KeyError(loc)
     ret['cha'] = cha
     ret['request_start'] = segment.request_start
     ret['request_end'] = segment.request_end
@@ -355,7 +353,7 @@ def append_instance(store, instance, evts, stas, dcs):
         store.append('events', pd.DataFrame([{'id': evt_id, 'url': evt_url,
                                               'mag': mag,
                                               'mag_type': mag_type}]),
-                     format='table', min_itemsize={'url': 100})
+                     format='table', min_itemsize={'url': 100, 'mag_type': 5})
 
     sta_id, sta_url = instance['sta_id'], instance.pop('sta_url')
     if sta_id not in stas:

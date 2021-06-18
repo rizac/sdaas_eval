@@ -332,6 +332,8 @@ def main(segment, config):
     ret['dc_url'] = segment.datacenter.dataselect_url
     net, sta, loc, cha = segment.data_seed_id.split('.')
     ret['loc'] = loc or ''
+    if len(loc) > 2:
+        raise KeyError(loc)
     ret['cha'] = cha
     ret['request_start'] = segment.request_start
     ret['request_end'] = segment.request_end

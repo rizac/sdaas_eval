@@ -312,7 +312,10 @@ def main(segment, config):
 
     cml_max_diff_ = cml_max_diff(trace)
     psd_periods = config['psd_periods']
-    psd_values = trace_psd(trace, segment.inventory(), psd_periods)[0]
+    try:
+        psd_values = trace_psd(trace, segment.inventory(), psd_periods)[0]
+    except Exception as exc:
+        raise SkipSegment('%s: %s' % (str(exc.__class__.__name__), str(exc)))
 
     # write stuff to csv:
     ret = OrderedDict()

@@ -319,7 +319,7 @@ def main(segment, config):
 
     # write stuff to csv:
     ret = OrderedDict()
-
+    ret['id'] = segment.id
     ret['cml_maxdiff'] = cml_max_diff_
     for per, val in zip(psd_periods, psd_values):
         ret['psd_%ss' % str(per)] = val
@@ -334,6 +334,8 @@ def main(segment, config):
     ret['dc_id'] = segment.datacenter.id
     ret['dc_url'] = segment.datacenter.dataselect_url
     net, sta, loc, cha = segment.data_seed_id.split('.')
+    ret['net'] = net
+    ret['sta'] = net
     ret['loc'] = loc or ''
     ret['cha'] = cha
     ret['request_start'] = segment.request_start
@@ -358,11 +360,13 @@ def append_instance(store, instance, evts, stas, dcs):
                                               'mag_type': mag_type}]),
                      format='table', min_itemsize={'url': 100, 'mag_type': 5})
 
-    sta_id, sta_url = instance['sta_id'], instance.pop('sta_url')
+    sta_id, net, sta, sta_url = \
+        instance['sta_id'], instance.pop('net'), instance.pop('sta'), instance.pop('sta_url')
     if sta_id not in stas:
         stas.add(sta_id)
-        store.append('stations', pd.DataFrame([{'id': sta_id, 'url': sta_url}]),
-                     format='table', min_itemsize={'url': 120})
+        store.append('stations', pd.DataFrame([{'id': sta_id, 'net': net,
+                                                'sta': sta, 'url': sta_url}]),
+                     format='table', min_itemsize={'net': 2, 'sta': 5, 'url': 120})
 
     dc_id, dc_url = instance['dc_id'], instance.pop('dc_url')
     if dc_id not in dcs:

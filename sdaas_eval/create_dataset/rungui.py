@@ -5,7 +5,7 @@ import os
 thisdir = os.path.dirname(__file__)
 
 dburl = yaml_load(os.path.join(thisdir, 'dburl.private.yaml'))['dburl']
-c = '%s/process/features_extractor.yaml' % thisdir
-p = '%s/process/features_extractor.py' % thisdir
+c = '%s/features_extractor.yaml' % thisdir
+p = '%s/features_extractor.py' % thisdir
 
 show_gui(dburl, p, c)

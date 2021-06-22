@@ -164,45 +164,6 @@ from stream2segment.process.funclib.ndarrays import cumsumsq as _cumsumsq
 ################################
 
 
-def linreg(trace):
-    # move import at module level if you use this function (not used anymore)
-    from scipy.stats import linregress
-
-    x = np.arange(0, trace.stats.npts, dtype=int)
-    res = linregress(x, trace.data)
-    return Trace(data=x*res.slope + res.intercept, header=trace.stats)
-
-
-def cml_max_diff(trace):
-    """
-    Return a measure of how much is rough the cumulative of the given trace
-    (lower number: cumulative smooth, higher numbers: rough).
-    The idea is that either signal (i.e. with earthquake recorded) and noise
-    traces have smooth cumulative. For abrupt changes (such as e.,g., spikes)
-    the returned number should be high (tests revealed numbers < 120 for
-    signal traces, ~=70 for noise traces, and > 300 for artificially created
-    spikes).
-
-    The returned number is given by:
-    ```
-        max(diff) / abs(mean(diff))
-    ```
-    (details here: https://stats.stackexchange.com/a/24610)
-    where `diff` is the finite difference (approx. 1st derivative) of the
-    cumulative of `trace`
-
-    :param trace: the given trace
-    :return: numeric number denoting the max diff of the cumulative
-    """
-    cml = _cumsumsq(trace.data, normalize=True)
-    # cml = cumsumsq(trace, normalize=True, copy=False)
-    # smoothness:  https://stats.stackexchange.com/a/24610
-    diff = np.diff(cml)
-    diff_mean = np.nanmean(diff)
-    diff_abs_mean = np.abs(diff_mean)
-    return np.nanmax(np.abs(diff)) / diff_abs_mean
-
-
 def assert1trace(stream):
     """Assert the stream has only one trace, raising an Exception if it's not the case,
     as this is the pre-condition for all processing functions implemented here.
@@ -310,7 +271,7 @@ def main(segment, config):
     assert1trace(stream)  # raise and return if stream has more than one trace
     trace = stream[0]  # work with the (surely) one trace now
 
-    cml_max_diff_ = cml_max_diff(trace)
+    cml_max_diff_ = cml_max_diff(detrend(trace.copy()))  # copy trace (do not modify it)
     psd_periods = config['psd_periods']
     try:
         psd_values = trace_psd(trace, segment.inventory(), psd_periods)[0]
@@ -348,6 +309,49 @@ def main(segment, config):
     ret['mag_type'] = segment.event.mag_type
 
     return ret
+
+
+def linreg(trace):
+    # move import at module level if you use this function (not used anymore)
+    from scipy.stats import linregress
+
+    x = np.arange(0, trace.stats.npts, dtype=int)
+    res = linregress(x, trace.data)
+    return Trace(data=x*res.slope + res.intercept, header=trace.stats)
+
+
+def cml_max_diff(trace):
+    """
+    Return a measure of how much is rough the cumulative of the given trace
+    (lower number: cumulative smooth, higher numbers: rough).
+    The idea is that either signal (i.e. with earthquake recorded) and noise
+    traces have smooth cumulative. For abrupt changes (such as e.,g., spikes)
+    the returned number should be high (tests revealed numbers < 120 for
+    signal traces, ~=70 for noise traces, and > 300 for artificially created
+    spikes).
+
+    The returned number is given by:
+    ```
+        max(diff) / abs(mean(diff))
+    ```
+    (details here: https://stats.stackexchange.com/a/24610)
+    where `diff` is the finite difference (approx. 1st derivative) of the
+    cumulative of `trace`
+
+    :param trace: the given trace
+    :return: numeric number denoting the max diff of the cumulative
+    """
+    cml = _cumsumsq(trace.data, normalize=True)
+    # cml = cumsumsq(trace, normalize=True, copy=False)
+    # smoothness:  https://stats.stackexchange.com/a/24610
+    diff = np.diff(cml)
+    diff_mean = np.nanmean(diff)
+    diff_abs_mean = np.abs(diff_mean)
+    return np.nanmax(np.abs(diff)) / diff_abs_mean
+
+
+def detrend(trace):
+    return trace.detrend('linear')
 
 
 def append_instance(store, instance, evts, stas, dcs):
@@ -436,7 +440,8 @@ if __name__ == "__main__":
 
 @gui.preprocess
 def bandpass_remresp(segment, config):
-    """Simple detrend, used in the GUI only. Modifies the Trace inplace
+    """Same as detrend(trace), used in the GUI as pre-processing.
+    Modifies the Trace inplace
 
     :return: a Trace object (a Stream is also valid value for functions decorated with
         `@gui.preprocess`)
@@ -445,7 +450,7 @@ def bandpass_remresp(segment, config):
     assert1trace(stream)  # raise and return if stream has more than one trace
     trace = stream[0]
     #  https://docs.obspy.org/packages/autogen/obspy.core.trace.Trace.detrend.html
-    return trace.detrend('constant')
+    return detrend(trace)
 
 
 @gui.plot('r', xaxis={'type': 'log'})  # , yaxis={'type': 'log'})
@@ -531,7 +536,6 @@ def psd(tr, inventory, psd_periods, obspy=False):
 
 def _cumulative_and_stats(trace):
     cml = cumsumsq(trace, normalize=True, copy=False)
-
     cml_max_diff_ = cml_max_diff(trace)
 
     # cum_sd_diff = np.nanstd(diff) / diff_abs_mean
@@ -576,32 +580,34 @@ def cumulative(segment, config):
     ret['cum_'.rjust(n) + caption] = tra
     duration = (trace.stats.endtime - trace.stats.starttime) / 2
 
-    tra = trace.copy()
-    tra.trim(starttime=trace.stats.starttime + duration)
-    tra.stats.starttime = trace.stats.starttime
-    caption, tra = _cumulative_and_stats(tra)
-    ret['cum2half_'.rjust(n) + caption] = tra
+    ret['cum'] = tra
 
-    tra = trace.copy()
-    tra.trim(endtime=trace.stats.endtime - duration)
-    caption, tra = _cumulative_and_stats(tra)
-    ret['cum1half_'.rjust(n) + caption] = tra
-
-    leng = int(trace.stats.npts / 2)
-    tra = trace.copy()
-    tra.data[leng:] = trace.data[:trace.stats.npts-leng]
-    caption, tra = _cumulative_and_stats(tra)
-    ret['cumDouble_'.rjust(n) + caption] = tra
-
-    tra = trace.copy()
-    tra.data *= 5
-    caption, tra = _cumulative_and_stats(tra)
-    ret['cum5times_'.rjust(n) + caption] = tra
-
-    tra = trace.copy()
-    tra.data[int(tra.stats.npts / 2)] = 5 * tra.data.max()
-    caption, tra = _cumulative_and_stats(tra)
-    ret['cumSpike_'.rjust(n) + caption] = tra
+    # tra = trace.copy()
+    # tra.trim(starttime=trace.stats.starttime + duration)
+    # tra.stats.starttime = trace.stats.starttime
+    # caption, tra = _cumulative_and_stats(tra)
+    # ret['cum2half_'.rjust(n) + caption] = tra
+    #
+    # tra = trace.copy()
+    # tra.trim(endtime=trace.stats.endtime - duration)
+    # caption, tra = _cumulative_and_stats(tra)
+    # ret['cum1half_'.rjust(n) + caption] = tra
+    #
+    # leng = int(trace.stats.npts / 2)
+    # tra = trace.copy()
+    # tra.data[leng:] = trace.data[:trace.stats.npts-leng]
+    # caption, tra = _cumulative_and_stats(tra)
+    # ret['cumDouble_'.rjust(n) + caption] = tra
+    #
+    # tra = trace.copy()
+    # tra.data *= 5
+    # caption, tra = _cumulative_and_stats(tra)
+    # ret['cum5times_'.rjust(n) + caption] = tra
+    #
+    # tra = trace.copy()
+    # tra.data[int(tra.stats.npts / 2)] = 5 * tra.data.max()
+    # caption, tra = _cumulative_and_stats(tra)
+    # ret['cumSpike_'.rjust(n) + caption] = tra
 
     # tra = trace.copy()
     # tra.data = np.diff(_cumulative_and_stats(tra)[1].data)

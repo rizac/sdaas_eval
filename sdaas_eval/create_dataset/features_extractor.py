@@ -274,16 +274,18 @@ def main(segment, config):
     cml_max_diff_ = cml_max_diff(detrend(trace.copy()))  # copy trace (do not modify it)
     psd_periods = config['psd_periods']
     try:
-        psd_values = trace_psd(trace, segment.inventory(), psd_periods)[0]
+       psd_values = trace_psd(trace, segment.inventory(), psd_periods)[0]
     except Exception as exc:
-        raise SkipSegment('%s: %s' % (str(exc.__class__.__name__), str(exc)))
+       raise SkipSegment('%s: %s' % (str(exc.__class__.__name__), str(exc)))
 
     # write stuff to csv:
     ret = OrderedDict()
+    ret['snr'] = snr
+    ret['PGA']
     ret['id'] = segment.id
     ret['cml_maxdiff'] = cml_max_diff_
     for per, val in zip(psd_periods, psd_values):
-        ret['psd_%ss' % str(per)] = val
+       ret['psd_%ss' % str(per)] = val
     ret['outlier'] = False  # change if labelled dataset (by default no labels)
     ret['evt_dist_deg'] = segment.event_distance_deg        # dist
     ret['duration_sec'] = trace.stats.endtime - trace.stats.starttime
@@ -351,7 +353,7 @@ def cml_max_diff(trace):
 
 
 def detrend(trace):
-    return trace.detrend('linear')
+    return trace.detrend()
 
 
 def append_instance(store, instance, evts, stas, dcs):
@@ -535,7 +537,6 @@ def psd(tr, inventory, psd_periods, obspy=False):
 
 
 def _cumulative_and_stats(trace):
-    cml = cumsumsq(trace, normalize=True, copy=False)
     cml_max_diff_ = cml_max_diff(trace)
 
     # cum_sd_diff = np.nanstd(diff) / diff_abs_mean
@@ -553,9 +554,28 @@ def _cumulative_and_stats(trace):
     # cum_max_diff2 = np.nanmax(np.abs(diff2)) / diff2_abs_mean
 
     # return '%.2f_%.2f_%f' % (cum_max_diff, cum_sd_diff, cum2d_diff), cml
-    return '{:,.2f}'.format(cml_max_diff_), cml
+    return '{:,.2f}'.format(cml_max_diff_), cumsumsq(trace, normalize=True, copy=True)
     # return '{:,}'.format(int(cum_max_diff2)), cml
     # return '%.2f' % cum_max_diff2 , cml
+
+
+@gui.plot
+def detrend_(segment, config):
+    from time import time
+    data = {}
+    for arg, kwargs in [
+        ['simple', {}],
+        ['linear', {}],
+        ['constant', {}],
+        ['polynomial', {'order': 2}],
+        ['spline', {'order': 2, 'dspline': 500}]
+    ]:
+        tr = segment.stream()[0].copy()
+        t = time()
+        tr = tr.detrend(arg, **kwargs)
+        t = time() - t
+        data['%s %.5f' % (arg, t)] = tr
+    return data
 
 
 @gui.plot
@@ -580,7 +600,8 @@ def cumulative(segment, config):
     ret['cum_'.rjust(n) + caption] = tra
     duration = (trace.stats.endtime - trace.stats.starttime) / 2
 
-    ret['cum'] = tra
+    from stream2segment.process.gui.webapp.mainapp import core
+    # ret['cum'] = tra
 
     # tra = trace.copy()
     # tra.trim(starttime=trace.stats.starttime + duration)

@@ -28,7 +28,7 @@ segments_selection:
   # missing_data_ratio: '<0.5'
   # event.id: '<100'
   # station.id: '<100'
-  # id: '<1000'
+  # id: '42870'  #  '<1000'
   # id: '276739 1742921'
   # event.time: "(2014-01-01T00:00:00, 2014-12-31T23:59:59)"
   # event.latitude: "[24, 70]"
